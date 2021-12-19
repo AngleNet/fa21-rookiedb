@@ -49,6 +49,9 @@ import java.util.*;
  * fromDisk.get(new IntDataBox(0)); // Optional.empty()
  * fromDisk.get(new IntDataBox(1)); // Optional.of(RecordId(1, 1))
  * fromDisk.get(new IntDataBox(2)); // Optional.of(RecordId(2, 2))
+ *
+ * Problems:
+ *  1. leaf nodes are linked between each other
  */
 public class BPlusTree {
     // Buffer manager
