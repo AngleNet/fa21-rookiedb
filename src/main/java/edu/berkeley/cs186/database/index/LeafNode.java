@@ -186,12 +186,13 @@ class LeafNode extends BPlusNode {
         // TODO(proj2): implement
         // there is still place -> add <key, rid> and resort
         // no place -> split this node
-        if(this.getKey(key).isPresent()) {
+        if (this.getKey(key).isPresent()) {
             throw new BPlusTreeException("Duplicate key");
         }
         this.keys.add(key);
         this.keys.sort(DataBox::compareTo);
         this.rids.add(rid);
+        // fixme: rids should not be reordered
         this.rids.sort(RecordId::compareTo);
         int order = this.metadata.getOrder();
         Optional<Pair<DataBox, Long>> opt = Optional.empty();
@@ -215,18 +216,48 @@ class LeafNode extends BPlusNode {
     }
 
     // See BPlusNode.bulkLoad.
+    // If fillFactor <= 0 || fillFactor > 1, we make it to be 0.5
     @Override
     public Optional<Pair<DataBox, Long>> bulkLoad(Iterator<Pair<DataBox, RecordId>> data,
                                                   float fillFactor) {
+        assert (!this.rightSibling.isPresent());
         // TODO(proj2): implement
+        int order = this.metadata.getOrder();
+        int max = (int) Math.floor(((fillFactor <= 0 || fillFactor > 1) ? 0.5 : 2 * fillFactor)
+                * order);
 
-        return Optional.empty();
+        Optional<Pair<DataBox, Long>> opt = Optional.empty();
+
+        // we assumed the data is already ordered
+        while (data.hasNext()) {
+            Pair<DataBox, RecordId> next = data.next();
+            if (this.keys.size() >= max) {
+                // split
+                ArrayList<DataBox> boxes = new ArrayList<>(2 * order);
+                ArrayList<RecordId> recs = new ArrayList<>(2 * order);
+                boxes.add(next.getFirst());
+                recs.add(next.getSecond());
+                LeafNode sib = new LeafNode(this.metadata, this.bufferManager, boxes,
+                        recs, Optional.empty(), this.treeContext);
+                opt = Optional.of(new Pair<>(next.getFirst(), sib.page.getPageNum()));
+                this.rightSibling = Optional.of(sib.page.getPageNum());
+            }
+            // add it
+            this.keys.add(next.getFirst());
+            this.rids.add(next.getSecond());
+        }
+        sync();
+        return opt;
     }
 
     // See BPlusNode.remove.
     @Override
     public void remove(DataBox key) {
         // TODO(proj2): implement
+        if (!this.getKey(key).isPresent()) {
+            return;
+        }
+
 
         return;
     }
