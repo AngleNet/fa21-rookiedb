@@ -149,10 +149,15 @@ class LeafNode extends BPlusNode {
     public LeafNode get(DataBox key) {
         // TODO(proj2): implement
         LeafNode cur = this;
+        LeafNode prev = null;
         while (cur != null) {
             // cur -> always point to node to be examined
             if (cur.keys.isEmpty()) {
                 break;
+            }
+            DataBox first = cur.keys.get(0);
+            if (key.compareTo(first) < 0) {
+                return prev != null ? prev : cur;
             }
             DataBox last = cur.keys.get(cur.keys.size() - 1);
             if (key.compareTo(last) <= 0) {
@@ -166,6 +171,7 @@ class LeafNode extends BPlusNode {
                 break;
             }
             // must be on its right sibling
+            prev = cur;
             cur = fromBytes(cur.metadata, cur.bufferManager, cur.treeContext, cur.rightSibling.get());
         }
         return cur;
