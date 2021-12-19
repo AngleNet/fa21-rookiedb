@@ -259,7 +259,18 @@ public class BPlusTree {
         // Note: You should NOT update the root variable directly.
         // Use the provided updateRoot() helper method to change
         // the tree's root if the old root splits.
-
+        Optional<Pair<DataBox, Long>> split = this.root.put(key, rid);
+        if (!split.isPresent()) {
+            return;
+        }
+        Pair<DataBox, Long> pair = split.get();
+        int order = this.metadata.getOrder();
+        ArrayList<DataBox> boxes = new ArrayList<>(2 * order);
+        boxes.add(pair.getFirst());
+        ArrayList<Long> children = new ArrayList<>(2 * order + 1);
+        children.add(this.root.getPage().getPageNum());
+        children.add(pair.getSecond());
+        this.updateRoot(new InnerNode(this.metadata, this.bufferManager, boxes, children, lockContext));
         return;
     }
 
@@ -288,7 +299,24 @@ public class BPlusTree {
         // Note: You should NOT update the root variable directly.
         // Use the provided updateRoot() helper method to change
         // the tree's root if the old root splits.
-
+        BPlusNode cur = this.root;
+        int order = this.metadata.getOrder();
+        while (data.hasNext()) {
+            Optional<Pair<DataBox, Long>> split = cur.bulkLoad(data, fillFactor);
+            if (!split.isPresent()) {
+                break;
+            }
+            Pair<DataBox, Long> pair = split.get();
+            ArrayList<DataBox> boxes = new ArrayList<>(2 * order);
+            boxes.add(pair.getFirst());
+            ArrayList<Long> children = new ArrayList<>(2 * order + 1);
+            children.add(cur.getPage().getPageNum());
+            children.add(pair.getSecond());
+            cur = new InnerNode(this.metadata, this.bufferManager, boxes, children, this.lockContext);
+        }
+        if (cur != this.root) {
+            this.updateRoot(cur);
+        }
         return;
     }
 

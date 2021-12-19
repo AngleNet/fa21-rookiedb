@@ -255,6 +255,7 @@ class LeafNode extends BPlusNode {
                         recs, Optional.empty(), this.treeContext);
                 opt = Optional.of(new Pair<>(next.getFirst(), sib.page.getPageNum()));
                 this.rightSibling = Optional.of(sib.page.getPageNum());
+                break;
             }
             // add it
             this.keys.add(next.getFirst());
@@ -275,6 +276,7 @@ class LeafNode extends BPlusNode {
         }
         this.keys.remove(index);
         this.rids.remove(index);
+        sync();
         return;
     }
 
