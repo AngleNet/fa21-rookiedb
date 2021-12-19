@@ -186,14 +186,22 @@ class LeafNode extends BPlusNode {
         // TODO(proj2): implement
         // there is still place -> add <key, rid> and resort
         // no place -> split this node
-        if (this.getKey(key).isPresent()) {
-            throw new BPlusTreeException("Duplicate key");
+        int index = 0;
+        while (index < this.keys.size()) {
+            DataBox cur = this.keys.get(index);
+            if (cur.compareTo(key) == 0) {
+                throw new BPlusTreeException("Duplicate key");
+            } else if (cur.compareTo(key) > 0) {
+                // cur > key
+                break;
+            } else {
+                // cur < key
+                index += 1;
+            }
         }
-        this.keys.add(key);
-        this.keys.sort(DataBox::compareTo);
-        this.rids.add(rid);
-        // fixme: rids should not be reordered
-        this.rids.sort(RecordId::compareTo);
+        // keys[index] > key || index is out of range
+        this.keys.add(index, key);
+        this.rids.add(index, rid);
         int order = this.metadata.getOrder();
         Optional<Pair<DataBox, Long>> opt = Optional.empty();
         if (this.keys.size() > 2 * order) {
@@ -254,11 +262,13 @@ class LeafNode extends BPlusNode {
     @Override
     public void remove(DataBox key) {
         // TODO(proj2): implement
-        if (!this.getKey(key).isPresent()) {
+        int index = this.keys.indexOf(key);
+        if (index < 0) {
+            // key is not in the node
             return;
         }
-
-
+        this.keys.remove(index);
+        this.rids.remove(index);
         return;
     }
 
