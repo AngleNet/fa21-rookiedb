@@ -108,13 +108,8 @@ class InnerNode extends BPlusNode {
             return Optional.empty();
         }
         Pair<DataBox, Long> pair = opt.get();
-        if (index == 0) {
-            this.keys.add(0, pair.getFirst());
-        } else {
-            this.keys.add(index - 1, pair.getFirst());
-        }
         this.keys.add(index, pair.getFirst());
-        this.children.add(index, pair.getSecond());
+        this.children.add(index + 1, pair.getSecond());
         int order = this.metadata.getOrder();
         if (this.keys.size() <= 2 * order) {
             // number of keys <= 2d, not split

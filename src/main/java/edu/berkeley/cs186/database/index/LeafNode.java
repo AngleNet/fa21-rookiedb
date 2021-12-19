@@ -4,6 +4,7 @@ import edu.berkeley.cs186.database.common.Buffer;
 import edu.berkeley.cs186.database.common.Pair;
 import edu.berkeley.cs186.database.concurrency.LockContext;
 import edu.berkeley.cs186.database.databox.DataBox;
+import edu.berkeley.cs186.database.databox.IntDataBox;
 import edu.berkeley.cs186.database.databox.Type;
 import edu.berkeley.cs186.database.memory.BufferManager;
 import edu.berkeley.cs186.database.memory.Page;
@@ -210,6 +211,9 @@ class LeafNode extends BPlusNode {
         this.rids.add(index, rid);
         int order = this.metadata.getOrder();
         Optional<Pair<DataBox, Long>> opt = Optional.empty();
+        if (this.keys.contains(new IntDataBox(14)) || this.keys.contains(new IntDataBox(15)) || this.keys.contains(new IntDataBox(16))) {
+            System.out.println("");
+        }
         if (this.keys.size() > 2 * order) {
             // need to split
             List<DataBox> rightKeys = this.keys.subList(order, this.keys.size());
@@ -219,7 +223,7 @@ class LeafNode extends BPlusNode {
             ArrayList<RecordId> recs = new ArrayList<>(2 * order);
             recs.addAll(rightRids);
             LeafNode sib = new LeafNode(this.metadata, this.bufferManager, boxes,
-                    recs, Optional.empty(), this.treeContext);
+                    recs, this.rightSibling, this.treeContext);
             opt = Optional.of(new Pair<>(rightKeys.get(0), sib.page.getPageNum()));
             rightKeys.clear();
             rightRids.clear();
